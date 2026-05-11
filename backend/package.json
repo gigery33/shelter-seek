@@ -2,6 +2,7 @@
   "name": "shelter-seek-backend",
   "version": "1.0.0",
   "private": true,
+  "type": "commonjs",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
