@@ -1,0 +1,58 @@
+generator client {
+  provider        = "prisma-client"
+  output          = "../src/generated/prisma"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  extensions = [postgis, pgcrypto]
+}
+
+enum AnimalType {
+  CAT
+  DOG
+  OTHER
+}
+
+enum ShelterStatus {
+  ACTIVE
+  FULL
+  CLOSED
+}
+
+model Shelter {
+  id          String        @id @default(uuid()) @db.Uuid
+  name        String
+  description String?
+  address     String
+  lat         Float
+  lng         Float
+  phone       String?
+  email       String?
+  website     String?
+  status      ShelterStatus @default(ACTIVE)
+  photoUrl    String?
+  animals     Animal[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@map("shelters")
+}
+
+model Animal {
+  id          String      @id @default(uuid()) @db.Uuid
+  name        String
+  type        AnimalType
+  breed       String?
+  age         Int?
+  description String?
+  photoUrl    String?
+  isAdopted   Boolean     @default(false)
+  shelterId   String      @db.Uuid
+  shelter     Shelter     @relation(fields: [shelterId], references: [id], onDelete: Cascade)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@map("animals")
+}
