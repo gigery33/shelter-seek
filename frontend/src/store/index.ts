@@ -1,7 +1,10 @@
 import { configureStore } from "@reduxjs/toolkit";
+import geolocationReducer from "./geolocation";
 
 export const store = configureStore({
-  reducer: {},
+  reducer: {
+    geolocation: geolocationReducer,
+  },
 });
 
 export type RootState = ReturnType<typeof store.getState>;

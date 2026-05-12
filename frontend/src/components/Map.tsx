@@ -1,9 +1,7 @@
-import { useEffect } from "react";
-import { MapContainer, TileLayer, useMap } from "react-leaflet";
+import { MapContainer, TileLayer } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-// Fix default marker icon issue with webpack/vite
 import iconUrl from "leaflet/dist/images/marker-icon.png";
 import iconRetinaUrl from "leaflet/dist/images/marker-icon-2x.png";
 import shadowUrl from "leaflet/dist/images/marker-shadow.png";
@@ -11,19 +9,18 @@ import shadowUrl from "leaflet/dist/images/marker-shadow.png";
 delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl;
 L.Icon.Default.mergeOptions({ iconUrl, iconRetinaUrl, shadowUrl });
 
-const center: [number, number] = [49.8397, 24.0297]; // Lviv
+const defaultCenter: [number, number] = [49.8397, 24.0297];
 
-function MapBounds() {
-  const map = useMap();
-
-  useEffect(() => {
-    map.setView(center, 13);
-  }, [map]);
-
-  return null;
+interface Props {
+  userPosition?: { lat: number; lng: number } | null;
+  children?: React.ReactNode;
 }
 
-export default function Map() {
+export default function Map({ userPosition, children }: Props) {
+  const center = userPosition
+    ? [userPosition.lat, userPosition.lng] as [number, number]
+    : defaultCenter;
+
   return (
     <MapContainer
       center={center}
@@ -34,7 +31,7 @@ export default function Map() {
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      <MapBounds />
+      {children}
     </MapContainer>
   );
 }
