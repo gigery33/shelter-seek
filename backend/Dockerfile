@@ -21,8 +21,11 @@ COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/prisma.config.ts ./
 
+COPY entrypoint.sh ./
+RUN chmod +x entrypoint.sh
+
 ENV DATABASE_URL="postgresql://postgres:postgres@db:5432/shelter_seek?schema=public"
 ENV NODE_ENV=production
 EXPOSE 3000
 
-CMD ["node", "dist/index.js"]
+CMD ["sh", "entrypoint.sh"]

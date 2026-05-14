@@ -9,50 +9,37 @@ datasource db {
   extensions = [postgis, pgcrypto]
 }
 
-enum AnimalType {
-  CAT
-  DOG
-  OTHER
+enum ShelterType {
+  BOMB_SHELTER
+  UNDERGROUND_PARKING
+  METRO
+}
+
+enum Amenity {
+  WATER
+  INTERNET
+  ACCESSIBLE
 }
 
 enum ShelterStatus {
-  ACTIVE
-  FULL
+  OPEN
   CLOSED
 }
 
 model Shelter {
   id          String        @id @default(uuid()) @db.Uuid
   name        String
+  type        ShelterType
   description String?
   address     String
   lat         Float
   lng         Float
-  phone       String?
-  email       String?
-  website     String?
-  status      ShelterStatus @default(ACTIVE)
+  amenities   Amenity[]
+  capacity    Int
   photoUrl    String?
-  animals     Animal[]
+  status      ShelterStatus @default(OPEN)
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
   @@map("shelters")
-}
-
-model Animal {
-  id          String      @id @default(uuid()) @db.Uuid
-  name        String
-  type        AnimalType
-  breed       String?
-  age         Int?
-  description String?
-  photoUrl    String?
-  isAdopted   Boolean     @default(false)
-  shelterId   String      @db.Uuid
-  shelter     Shelter     @relation(fields: [shelterId], references: [id], onDelete: Cascade)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-
-  @@map("animals")
 }
