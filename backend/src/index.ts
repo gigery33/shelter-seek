@@ -35,6 +35,11 @@ app.get("/api/health", (_req, res) => {
 
 app.use("/api/auth", authRoutes);
 
+app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  console.error("Unhandled error:", err);
+  res.status(500).json({ error: "Internal server error" });
+});
+
 async function main() {
   try {
     await prisma.$connect();

@@ -9,27 +9,42 @@ export interface AuthUser {
 interface AuthState {
   user: AuthUser | null;
   loading: boolean;
+  error: string | null;
 }
 
 const initialState: AuthState = {
   user: null,
   loading: true,
+  error: null,
 };
 
 export const login = createAsyncThunk(
   "auth/login",
-  async (payload: { email: string; password: string }) => {
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify(payload),
-    });
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error || "Login failed");
+  async (payload: { email: string; password: string }, { rejectWithValue }) => {
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      });
+
+      const text = await res.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        return rejectWithValue(`Server returned HTML instead of JSON (status ${res.status})`);
+      }
+
+      if (!res.ok) {
+        return rejectWithValue(data.error || "Login failed");
+      }
+
+      return data as AuthUser;
+    } catch (err: any) {
+      return rejectWithValue(err.message || "Network error");
     }
-    return (await res.json()) as AuthUser;
   }
 );
 
@@ -43,9 +58,13 @@ export const logout = createAsyncThunk("auth/logout", async () => {
 export const fetchCurrentUser = createAsyncThunk(
   "auth/fetchCurrentUser",
   async () => {
-    const res = await fetch("/api/auth/me", { credentials: "include" });
-    if (!res.ok) return null;
-    return (await res.json()) as AuthUser;
+    try {
+      const res = await fetch("/api/auth/me", { credentials: "include" });
+      if (!res.ok) return null;
+      return (await res.json()) as AuthUser;
+    } catch {
+      return null;
+    }
   }
 );
 
@@ -55,11 +74,19 @@ const authSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
+      .addCase(login.pending, (state) => {
+        state.error = null;
+      })
       .addCase(login.fulfilled, (state, action) => {
         state.user = action.payload;
+        state.error = null;
+      })
+      .addCase(login.rejected, (state, action) => {
+        state.error = (action.payload as string) || action.error.message || "Login failed";
       })
       .addCase(logout.fulfilled, (state) => {
         state.user = null;
+        state.error = null;
       })
       .addCase(fetchCurrentUser.pending, (state) => {
         state.loading = true;

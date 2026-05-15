@@ -4,21 +4,15 @@ import { login } from "../store/auth";
 
 export default function LoginPage() {
   const dispatch = useAppDispatch();
-  const { user } = useAppSelector((s) => s.auth);
+  const { user, error } = useAppSelector((s) => s.auth);
   const [email, setEmail] = useState("admin");
   const [password, setPassword] = useState("admin");
-  const [error, setError] = useState("");
 
   if (user) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-    try {
-      await dispatch(login({ email, password })).unwrap();
-    } catch (err: any) {
-      setError(err.message || "Login failed");
-    }
+    dispatch(login({ email, password }));
   };
 
   return (
@@ -47,7 +41,17 @@ export default function LoginPage() {
         </p>
 
         {error && (
-          <p style={{ color: "#dc2626", fontSize: 14, marginBottom: 16 }}>
+          <p
+            style={{
+              color: "#dc2626",
+              fontSize: 13,
+              marginBottom: 16,
+              padding: "8px 12px",
+              background: "#fef2f2",
+              borderRadius: 8,
+              wordBreak: "break-word",
+            }}
+          >
             {error}
           </p>
         )}
