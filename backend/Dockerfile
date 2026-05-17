@@ -7,7 +7,7 @@ COPY prisma.config.ts ./
 COPY tsconfig.json ./
 COPY src/ ./src/
 
-RUN npm ci
+RUN npm install
 ENV DATABASE_URL="postgresql://postgres:postgres@db:5432/shelter_seek?schema=public"
 RUN npx prisma generate
 RUN npm run build
