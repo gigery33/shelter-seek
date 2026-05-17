@@ -3,20 +3,21 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Map from "./components/Map";
 import UserMarker from "./components/UserMarker";
 import ShelterMarker from "./components/ShelterMarker";
+import FilterPanel from "./components/FilterPanel";
 import GeolocationGate from "./components/GeolocationGate";
 import { AdminRoute } from "./components/AdminRoute";
 import LoginPage from "./pages/LoginPage";
 import AdminPage from "./pages/AdminPage";
 import { useAppDispatch, useAppSelector } from "./store/hooks";
 import { fetchCurrentUser } from "./store/auth";
-import { fetchShelters } from "./store/shelters";
+import { fetchShelters, selectVisibleShelters } from "./store/shelters";
 
 function MapPage() {
   const [backendStatus, setBackendStatus] = useState<
     "checking" | "ok" | "error"
   >("checking");
   const { position } = useAppSelector((s) => s.geolocation);
-  const { items: shelters } = useAppSelector((s) => s.shelters);
+  const visibleShelters = useAppSelector(selectVisibleShelters);
   const dispatch = useAppDispatch();
 
   useEffect(() => {
@@ -36,8 +37,9 @@ function MapPage() {
     <GeolocationGate>
       <div style={{ position: "relative", width: "100%", height: "100%" }}>
         <Map userPosition={position}>
+          <FilterPanel />
           {position && <UserMarker lat={position.lat} lng={position.lng} />}
-          {shelters.map((s) => (
+          {visibleShelters.map((s) => (
             <ShelterMarker key={s.id} shelter={s} />
           ))}
         </Map>
