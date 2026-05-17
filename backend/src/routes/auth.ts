@@ -1,6 +1,7 @@
 import { Router, Request, Response, NextFunction } from "express";
 import bcrypt from "bcrypt";
 import { prisma } from "../lib/prisma";
+import "../lib/session";
 
 const router = Router();
 
@@ -32,7 +33,7 @@ router.post(
       return;
     }
 
-    (req as any).session.user = {
+    req.session.user = {
       id: user.id,
       email: user.email,
       isAdmin: user.isAdmin,
@@ -47,14 +48,16 @@ router.post(
 );
 
 router.post("/logout", (req: Request, res: Response) => {
-  (req as any).session.destroy?.();
+  req.session.destroy?.((err) => {
+    if (err) console.error("Session destroy error:", err);
+  });
   res.json({ ok: true });
 });
 
 router.get(
   "/me",
   asyncHandler(async (req, res) => {
-    const user = (req as any).session?.user;
+    const user = req.session?.user;
     if (!user) {
       res.status(401).json({ error: "Not authenticated" });
       return;
@@ -62,7 +65,9 @@ router.get(
 
     const exists = await prisma.user.findUnique({ where: { id: user.id } });
     if (!exists) {
-      (req as any).session.destroy?.();
+      req.session.destroy?.((err) => {
+        if (err) console.error("Session destroy error:", err);
+      });
       res.status(401).json({ error: "User not found" });
       return;
     }

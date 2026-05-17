@@ -1,7 +1,8 @@
 #!/bin/sh
+set -e
 
 echo "Running database migrations..."
-npx prisma db push
+npx prisma db push --accept-data-loss
 
 echo "Running seed..."
 node dist/seed.js

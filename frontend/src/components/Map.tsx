@@ -9,7 +9,7 @@ import shadowUrl from "leaflet/dist/images/marker-shadow.png";
 delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl;
 L.Icon.Default.mergeOptions({ iconUrl, iconRetinaUrl, shadowUrl });
 
-const defaultCenter: [number, number] = [49.8397, 24.0297];
+const defaultCenter: [number, number] = [50.4501, 30.5234];
 
 interface Props {
   userPosition?: { lat: number; lng: number } | null;
