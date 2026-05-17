@@ -22,6 +22,13 @@ services:
     environment:
       DATABASE_URL: "postgresql://postgres:postgres@db:5432/shelter_seek?schema=public"
       PORT: "3000"
+      SESSION_SECRET: "shelter-seek-session-secret"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
     depends_on:
       db:
         condition: service_healthy
@@ -31,4 +38,5 @@ services:
     ports:
       - "5173:80"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
