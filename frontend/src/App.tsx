@@ -2,18 +2,22 @@ import { useEffect, useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import Map from "./components/Map";
 import UserMarker from "./components/UserMarker";
+import ShelterMarker from "./components/ShelterMarker";
 import GeolocationGate from "./components/GeolocationGate";
 import { AdminRoute } from "./components/AdminRoute";
 import LoginPage from "./pages/LoginPage";
 import AdminPage from "./pages/AdminPage";
 import { useAppDispatch, useAppSelector } from "./store/hooks";
 import { fetchCurrentUser } from "./store/auth";
+import { fetchShelters } from "./store/shelters";
 
 function MapPage() {
   const [backendStatus, setBackendStatus] = useState<
     "checking" | "ok" | "error"
   >("checking");
   const { position } = useAppSelector((s) => s.geolocation);
+  const { items: shelters } = useAppSelector((s) => s.shelters);
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     fetch("/api/health")
@@ -24,11 +28,18 @@ function MapPage() {
       .catch(() => setBackendStatus("error"));
   }, []);
 
+  useEffect(() => {
+    dispatch(fetchShelters());
+  }, [dispatch]);
+
   return (
     <GeolocationGate>
       <div style={{ position: "relative", width: "100%", height: "100%" }}>
         <Map userPosition={position}>
           {position && <UserMarker lat={position.lat} lng={position.lng} />}
+          {shelters.map((s) => (
+            <ShelterMarker key={s.id} shelter={s} />
+          ))}
         </Map>
         <div
           style={{

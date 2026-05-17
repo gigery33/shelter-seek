@@ -5,6 +5,7 @@ import session from "express-session";
 import pgSession from "connect-pg-simple";
 import { prisma } from "./lib/prisma";
 import authRoutes from "./routes/auth";
+import sheltersRouter from "./routes/shelters";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -34,6 +35,7 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/shelters", sheltersRouter);
 
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error("Unhandled error:", err);
