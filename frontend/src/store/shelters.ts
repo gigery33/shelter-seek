@@ -14,16 +14,23 @@ export interface Shelter {
   status: "OPEN" | "CLOSED";
 }
 
+export interface Filters {
+  types: string[];
+  amenities: string[];
+}
+
 interface SheltersState {
   items: Shelter[];
   loading: boolean;
   error: string | null;
+  filters: Filters;
 }
 
 const initialState: SheltersState = {
   items: [],
   loading: false,
   error: null,
+  filters: { types: [], amenities: [] },
 };
 
 export const fetchShelters = createAsyncThunk("shelters/fetch", async () => {
@@ -32,10 +39,69 @@ export const fetchShelters = createAsyncThunk("shelters/fetch", async () => {
   return (await res.json()) as Shelter[];
 });
 
+export const createShelter = createAsyncThunk(
+  "shelters/create",
+  async (data: Record<string, unknown>) => {
+    const res = await fetch("/api/shelters", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || "Failed to create shelter");
+    }
+    return (await res.json()) as Shelter;
+  }
+);
+
+export const updateShelter = createAsyncThunk(
+  "shelters/update",
+  async ({ id, data }: { id: string; data: Record<string, unknown> }) => {
+    const res = await fetch(`/api/shelters/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || "Failed to update shelter");
+    }
+    return (await res.json()) as Shelter;
+  }
+);
+
+export const deleteShelter = createAsyncThunk(
+  "shelters/delete",
+  async (id: string) => {
+    const res = await fetch(`/api/shelters/${id}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || "Failed to delete shelter");
+    }
+    return id;
+  }
+);
+
 const sheltersSlice = createSlice({
   name: "shelters",
   initialState,
-  reducers: {},
+  reducers: {
+    setTypeFilter(state, action) {
+      state.filters.types = action.payload;
+    },
+    setAmenityFilter(state, action) {
+      state.filters.amenities = action.payload;
+    },
+    resetFilters(state) {
+      state.filters = { types: [], amenities: [] };
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchShelters.pending, (state) => {
@@ -52,5 +118,22 @@ const sheltersSlice = createSlice({
       });
   },
 });
+
+export const { setTypeFilter, setAmenityFilter, resetFilters } = sheltersSlice.actions;
+
+export function selectVisibleShelters(state: {
+  shelters: SheltersState;
+}): Shelter[] {
+  const { items, filters } = state.shelters;
+  return items.filter((s) => {
+    if (filters.types.length > 0 && !filters.types.includes(s.type)) return false;
+    if (
+      filters.amenities.length > 0 &&
+      !filters.amenities.every((a) => s.amenities.includes(a))
+    )
+      return false;
+    return true;
+  });
+}
 
 export default sheltersSlice.reducer;
