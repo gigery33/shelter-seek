@@ -8,6 +8,7 @@ import {
   deleteShelter,
   type Shelter,
 } from "../store/shelters";
+import { fetchReports, resolveReport } from "../store/reports";
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -67,7 +68,9 @@ export default function AdminPage() {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((s) => s.auth);
   const { items: shelters, loading } = useAppSelector((s) => s.shelters);
+  const { items: reports } = useAppSelector((s) => s.reports);
 
+  const [activeTab, setActiveTab] = useState("shelters");
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<FormData>(emptyForm);
@@ -76,6 +79,12 @@ export default function AdminPage() {
   useEffect(() => {
     dispatch(fetchShelters());
   }, [dispatch]);
+
+  useEffect(() => {
+    if (activeTab === "reports") {
+      dispatch(fetchReports());
+    }
+  }, [activeTab, dispatch]);
 
   function openCreate() {
     setEditingId(null);
@@ -174,6 +183,90 @@ export default function AdminPage() {
         </div>
       </div>
 
+      <div style={{ display: "flex", gap: 0, marginBottom: 16, borderBottom: "2px solid #e5e7eb" }}>
+        {(["shelters", "reports"] as const).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            style={{
+              padding: "10px 20px",
+              background: "none",
+              border: "none",
+              borderBottom: activeTab === tab ? "2px solid #2563eb" : "2px solid transparent",
+              cursor: "pointer",
+              fontWeight: activeTab === tab ? 600 : 400,
+              color: activeTab === tab ? "#2563eb" : "#64748b",
+              fontSize: 15,
+              marginBottom: -2,
+            }}
+          >
+            {tab === "shelters" ? "Укриття" : "Скарги"}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === "reports" ? (
+        <>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+            <thead>
+              <tr style={{ background: "#f9fafb", textAlign: "left" }}>
+                <th style={{ padding: "10px 12px", borderBottom: "2px solid #e5e7eb" }}>Тип</th>
+                <th style={{ padding: "10px 12px", borderBottom: "2px solid #e5e7eb" }}>Укриття</th>
+                <th style={{ padding: "10px 12px", borderBottom: "2px solid #e5e7eb" }}>Коментар</th>
+                <th style={{ padding: "10px 12px", borderBottom: "2px solid #e5e7eb" }}>Дата</th>
+                <th style={{ padding: "10px 12px", borderBottom: "2px solid #e5e7eb" }}>Дії</th>
+              </tr>
+            </thead>
+            <tbody>
+              {reports.map((r) => {
+                const shelter = shelters.find((s) => s.id === r.shelterId);
+                const commentTruncated = r.comment && r.comment.length > 80
+                  ? r.comment.slice(0, 80) + "…"
+                  : r.comment;
+                return (
+                  <tr key={r.id} style={{ borderBottom: "1px solid #e5e7eb" }}>
+                    <td style={{ padding: "10px 12px" }}>{typeLabels[r.type] || r.type}</td>
+                    <td style={{ padding: "10px 12px", color: "#6b7280" }}>
+                      {shelter ? `${shelter.name}, ${shelter.address}` : "—"}
+                    </td>
+                    <td style={{ padding: "10px 12px", maxWidth: 300, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={r.comment || ""}>
+                      {commentTruncated || "—"}
+                    </td>
+                    <td style={{ padding: "10px 12px", color: "#6b7280" }}>
+                      {new Date(r.createdAt).toLocaleDateString("uk-UA")}
+                    </td>
+                    <td style={{ padding: "10px 12px" }}>
+                      <button
+                        onClick={() => dispatch(resolveReport(r.id))}
+                        style={{
+                          padding: "4px 12px",
+                          background: "#f0fdf4",
+                          border: "1px solid #86efac",
+                          borderRadius: 6,
+                          cursor: "pointer",
+                          fontSize: 13,
+                          color: "#16a34a",
+                          fontWeight: 600,
+                        }}
+                      >
+                        Закрити
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+              {reports.length === 0 && (
+                <tr>
+                  <td colSpan={5} style={{ padding: 24, textAlign: "center", color: "#9ca3af" }}>
+                    Скарг немає
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </>
+      ) : (
+        <>
       <button
         onClick={openCreate}
         style={{
@@ -264,6 +357,9 @@ export default function AdminPage() {
           ))}
         </tbody>
       </table>
+
+      </>
+      )}
 
       {showModal && (
         <div

@@ -3,22 +3,29 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Map from "./components/Map";
 import UserMarker from "./components/UserMarker";
 import ShelterMarker from "./components/ShelterMarker";
+import RouteLayer from "./components/Route";
 import FilterPanel from "./components/FilterPanel";
+import SosButton from "./components/SosButton";
+import SosModal from "./components/SosModal";
 import GeolocationGate from "./components/GeolocationGate";
 import { AdminRoute } from "./components/AdminRoute";
 import LoginPage from "./pages/LoginPage";
 import AdminPage from "./pages/AdminPage";
 import { useAppDispatch, useAppSelector } from "./store/hooks";
 import { fetchCurrentUser } from "./store/auth";
-import { fetchShelters, selectVisibleShelters } from "./store/shelters";
+import { fetchShelters, selectVisibleShelters, clearRoute } from "./store/shelters";
 
 function MapPage() {
   const [backendStatus, setBackendStatus] = useState<
     "checking" | "ok" | "error"
   >("checking");
+  const [sosOpen, setSosOpen] = useState(false);
   const { position } = useAppSelector((s) => s.geolocation);
+  const { routingTo, items: allShelters } = useAppSelector((s) => s.shelters);
   const visibleShelters = useAppSelector(selectVisibleShelters);
   const dispatch = useAppDispatch();
+
+  const routeShelter = routingTo ? allShelters.find((s) => s.id === routingTo) : null;
 
   useEffect(() => {
     fetch("/api/health")
@@ -42,7 +49,37 @@ function MapPage() {
           {visibleShelters.map((s) => (
             <ShelterMarker key={s.id} shelter={s} />
           ))}
+          {routeShelter && position && (
+            <RouteLayer
+              from={position}
+              to={{ lat: routeShelter.lat, lng: routeShelter.lng }}
+            />
+          )}
         </Map>
+        {routingTo && (
+          <button
+            onClick={() => dispatch(clearRoute())}
+            style={{
+              position: "absolute",
+              top: 16,
+              left: "50%",
+              transform: "translateX(-50%)",
+              zIndex: 1000,
+              padding: "10px 20px",
+              background: "#fff",
+              border: "1px solid #d1d5db",
+              borderRadius: 8,
+              cursor: "pointer",
+              fontWeight: 600,
+              fontSize: 14,
+              boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+            }}
+          >
+            ✕ Скасувати маршрут
+          </button>
+        )}
+        <SosButton onClick={() => setSosOpen(true)} />
+        <SosModal open={sosOpen} onClose={() => setSosOpen(false)} />
         <div
           style={{
             position: "absolute",
