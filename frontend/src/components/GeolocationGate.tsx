@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { requestGeolocation } from "../store/geolocation";
 
@@ -9,6 +9,7 @@ interface Props {
 export default function GeolocationGate({ children }: Props) {
   const dispatch = useAppDispatch();
   const { status } = useAppSelector((s) => s.geolocation);
+  const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
     if (status === "idle") {
@@ -16,75 +17,75 @@ export default function GeolocationGate({ children }: Props) {
     }
   }, [status, dispatch]);
 
-  if (status === "loading") {
-    return (
-      <div
-        style={{
-          position: "fixed",
-          inset: 0,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "#fff",
-          zIndex: 9999,
-        }}
-      >
-        <p style={{ fontSize: 18, color: "#555" }}>
-          Отримуємо ваше місцезнаходження...
-        </p>
-      </div>
-    );
-  }
-
-  if (status !== "denied") return <>{children}</>;
+  const show = !dismissed && (status === "denied" || status === "loading");
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "rgba(0,0,0,0.5)",
-        zIndex: 9999,
-      }}
-    >
-      <div
-        style={{
-          background: "#fff",
-          borderRadius: 16,
-          padding: "32px 40px",
-          maxWidth: 400,
-          textAlign: "center",
-          boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
-        }}
-      >
-        <div style={{ fontSize: 48, marginBottom: 16 }}>📍</div>
-        <h2 style={{ margin: "0 0 12px", color: "#1a1a1a" }}>
-          Геолокація відключена
-        </h2>
-        <p style={{ margin: 0, color: "#555", lineHeight: 1.5 }}>
-          Ви не зможете знайти найближчі до вас укриття та
-          отримувати маршрути до них.
-        </p>
-        <button
-          onClick={() => dispatch(requestGeolocation())}
+    <>
+      {show && (
+        <div
           style={{
-            marginTop: 24,
-            padding: "12px 32px",
-            fontSize: 16,
-            fontWeight: 600,
-            color: "#fff",
-            background: "#2563eb",
-            border: "none",
-            borderRadius: 10,
-            cursor: "pointer",
+            position: "fixed",
+            top: 16,
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 11000,
+            background: status === "loading" ? "#e0f2fe" : "#fef3c7",
+            border: `1px solid ${status === "loading" ? "#7dd3fc" : "#fbbf24"}`,
+            borderRadius: 12,
+            padding: "14px 20px",
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
+            maxWidth: 420,
           }}
         >
-          Надати доступ
-        </button>
-      </div>
-    </div>
+          <span style={{ fontSize: 20 }}>
+            {status === "loading" ? "⏳" : "📍"}
+          </span>
+          <span style={{ flex: 1, fontSize: 14, lineHeight: 1.4 }}>
+            {status === "loading"
+              ? "Отримуємо ваше місцезнаходження..."
+              : "Увімкніть геолокацію в браузері, щоб бачити свою позицію на мапі та прокладати маршрути."}
+          </span>
+          <div style={{ display: "flex", gap: 6 }}>
+            {status === "denied" && (
+              <button
+                onClick={() => dispatch(requestGeolocation())}
+                style={{
+                  padding: "6px 12px",
+                  background: "#2563eb",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: 6,
+                  fontSize: 13,
+                  cursor: "pointer",
+                  fontWeight: 600,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Увімкнути
+              </button>
+            )}
+            <button
+              onClick={() => setDismissed(true)}
+              style={{
+                padding: "6px 10px",
+                background: "transparent",
+                border: "none",
+                borderRadius: 6,
+                fontSize: 16,
+                cursor: "pointer",
+                color: "#6b7280",
+                lineHeight: 1,
+              }}
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+      {children}
+    </>
   );
 }

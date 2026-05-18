@@ -4,7 +4,17 @@ import { Provider } from "react-redux";
 import { BrowserRouter } from "react-router-dom";
 import { store } from "./store";
 import App from "./App";
+import { registerSW } from "virtual:pwa-register";
 import "./index.css";
+
+const updateSW = registerSW({
+  onNeedRefresh() {
+    if (confirm("Доступна нова версія. Оновити?")) updateSW(true);
+  },
+  onOfflineReady() {
+    console.log("App ready for offline use");
+  },
+});
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

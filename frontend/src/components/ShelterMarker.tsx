@@ -38,11 +38,23 @@ const typeLabels: Record<string, string> = {
   UNDERGROUND_PARKING: "Паркінг",
 };
 
+function formatDistance(meters: number): string {
+  if (meters < 1000) return `${Math.round(meters)} м`;
+  return `${(meters / 1000).toFixed(1)} км`;
+}
+
+function toArray(a: unknown): string[] {
+  if (Array.isArray(a)) return a;
+  if (typeof a === "string") return a.replace(/[{}]/g, "").split(",").filter(Boolean);
+  return [];
+}
+
 interface Props {
   shelter: Shelter;
 }
 
 export default function ShelterMarker({ shelter }: Props) {
+  const amenities = toArray(shelter.amenities);
   const dispatch = useAppDispatch();
   const position = useAppSelector((s) => s.geolocation.position);
   const noLocation = !position;
@@ -62,10 +74,18 @@ export default function ShelterMarker({ shelter }: Props) {
           <span style={{ color: statusColors[shelter.status] }}>
             {shelter.status === "OPEN" ? "Відкрито" : "Закрито"}
           </span>
-          {shelter.amenities.length > 0 && (
+          {amenities.length > 0 && (
             <>
               <br />
-              <span>Зручності: {shelter.amenities.join(", ")}</span>
+              <span>Зручності: {amenities.join(", ")}</span>
+            </>
+          )}
+          {shelter.distance_m !== undefined && (
+            <>
+              <br />
+              <span style={{ color: "#2563eb", fontWeight: 600 }}>
+                Відстань: {formatDistance(shelter.distance_m)}
+              </span>
             </>
           )}
           {shelter.photoUrl && (
