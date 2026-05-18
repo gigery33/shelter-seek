@@ -75,6 +75,7 @@ model Shelter {
   status      ShelterStatus @default(OPEN)
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
+  geom        Unsupported("geography(Point, 4326)")?
 
   @@map("shelters")
 }

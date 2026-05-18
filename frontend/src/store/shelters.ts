@@ -3,6 +3,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 export interface Shelter {
   id: string;
   name: string;
+  slug: string;
   type: "BOMB_SHELTER" | "UNDERGROUND_PARKING" | "METRO";
   description: string | null;
   address: string;
@@ -12,11 +13,16 @@ export interface Shelter {
   capacity: number;
   photoUrl: string | null;
   status: "OPEN" | "CLOSED";
+  distance_m?: number;
 }
 
 export interface Filters {
   types: string[];
   amenities: string[];
+}
+
+export interface ShelterWithDistance extends Shelter {
+  distance_m: number;
 }
 
 interface SheltersState {
@@ -25,6 +31,8 @@ interface SheltersState {
   error: string | null;
   filters: Filters;
   routingTo: string | null;
+  nearestMode: boolean;
+  nearest: ShelterWithDistance[];
 }
 
 const initialState: SheltersState = {
@@ -33,6 +41,8 @@ const initialState: SheltersState = {
   error: null,
   filters: { types: [], amenities: [] },
   routingTo: null,
+  nearestMode: false,
+  nearest: [],
 };
 
 export const fetchShelters = createAsyncThunk("shelters/fetch", async () => {
@@ -90,6 +100,17 @@ export const deleteShelter = createAsyncThunk(
   }
 );
 
+export const fetchNearest = createAsyncThunk(
+  "shelters/fetchNearest",
+  async ({ lat, lng, limit }: { lat: number; lng: number; limit?: number }) => {
+    const params = new URLSearchParams({ lat: String(lat), lng: String(lng) });
+    if (limit) params.set("limit", String(limit));
+    const res = await fetch(`/api/shelters/nearest?${params}`);
+    if (!res.ok) throw new Error("Failed to fetch nearest shelters");
+    return (await res.json()) as ShelterWithDistance[];
+  }
+);
+
 const sheltersSlice = createSlice({
   name: "shelters",
   initialState,
@@ -109,6 +130,13 @@ const sheltersSlice = createSlice({
     clearRoute(state) {
       state.routingTo = null;
     },
+    enableNearestMode(state) {
+      state.nearestMode = true;
+    },
+    disableNearestMode(state) {
+      state.nearestMode = false;
+      state.nearest = [];
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -123,11 +151,14 @@ const sheltersSlice = createSlice({
       .addCase(fetchShelters.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || "Failed to fetch shelters";
+      })
+      .addCase(fetchNearest.fulfilled, (state, action) => {
+        state.nearest = action.payload;
       });
   },
 });
 
-export const { setTypeFilter, setAmenityFilter, resetFilters, startRoute, clearRoute } = sheltersSlice.actions;
+export const { setTypeFilter, setAmenityFilter, resetFilters, startRoute, clearRoute, enableNearestMode, disableNearestMode } = sheltersSlice.actions;
 
 export function selectVisibleShelters(state: {
   shelters: SheltersState;

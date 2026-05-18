@@ -4,6 +4,9 @@ import {
   setAmenityFilter,
   resetFilters,
   selectVisibleShelters,
+  enableNearestMode,
+  disableNearestMode,
+  fetchNearest,
 } from "../store/shelters";
 
 const typeOptions = [
@@ -20,7 +23,8 @@ const amenityOptions = [
 
 export default function FilterPanel() {
   const dispatch = useAppDispatch();
-  const { filters } = useAppSelector((s) => s.shelters);
+  const { filters, nearestMode } = useAppSelector((s) => s.shelters);
+  const position = useAppSelector((s) => s.geolocation.position);
   const visibleCount = useAppSelector(selectVisibleShelters).length;
   const totalCount = useAppSelector((s) => s.shelters.items.length);
 
@@ -124,6 +128,48 @@ export default function FilterPanel() {
           Скинути фільтри
         </button>
       )}
+
+      <div style={{ marginTop: 12, borderTop: "1px solid #e5e7eb", paddingTop: 10 }}>
+        {nearestMode ? (
+          <button
+            onClick={() => dispatch(disableNearestMode())}
+            style={{
+              width: "100%",
+              padding: "6px 0",
+              background: "#f3f4f6",
+              border: "1px solid #d1d5db",
+              borderRadius: 6,
+              cursor: "pointer",
+              fontSize: 13,
+              fontWeight: 600,
+            }}
+          >
+            Показати всі
+          </button>
+        ) : (
+          <button
+            disabled={!position}
+            onClick={() => {
+              if (!position) return;
+              dispatch(enableNearestMode());
+              dispatch(fetchNearest({ lat: position.lat, lng: position.lng, limit: 5 }));
+            }}
+            style={{
+              width: "100%",
+              padding: "6px 0",
+              background: position ? "#2563eb" : "#e5e7eb",
+              color: position ? "#fff" : "#9ca3af",
+              border: "none",
+              borderRadius: 6,
+              cursor: position ? "pointer" : "not-allowed",
+              fontSize: 13,
+              fontWeight: 600,
+            }}
+          >
+            Найближчі 5 укриттів
+          </button>
+        )}
+      </div>
     </div>
   );
 }

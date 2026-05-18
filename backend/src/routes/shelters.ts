@@ -49,6 +49,32 @@ router.get("/", async (_req: Request, res: Response) => {
   res.json(shelters);
 });
 
+const nearestQuery = z.object({
+  lat: z.coerce.number(),
+  lng: z.coerce.number(),
+  limit: z.coerce.number().int().min(1).max(50).default(10),
+});
+
+router.get("/nearest", async (req: Request, res: Response) => {
+  const parsed = nearestQuery.safeParse(req.query);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.flatten() });
+    return;
+  }
+  const { lat, lng, limit } = parsed.data;
+  const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
+    `SELECT id, name, slug, type, description, address, lat, lng, amenities, capacity, "photoUrl", status, ST_Distance(geom, ST_SetSRID(ST_MakePoint($1, $2), 4326)) AS distance_m FROM shelters ORDER BY geom <-> ST_SetSRID(ST_MakePoint($1, $2), 4326) LIMIT $3`,
+    lng, lat, limit
+  );
+  const parsedRows = rows.map((r) => ({
+    ...r,
+    amenities: typeof r.amenities === "string"
+      ? r.amenities.replace(/[{}]/g, "").split(",").filter(Boolean)
+      : r.amenities,
+  }));
+  res.json(parsedRows);
+});
+
 router.get("/:id", async (req: Request, res: Response) => {
   const shelter = await prisma.shelter.findUnique({ where: { id: getId(req) } });
   if (!shelter) {

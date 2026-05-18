@@ -14,6 +14,8 @@ import AdminPage from "./pages/AdminPage";
 import { useAppDispatch, useAppSelector } from "./store/hooks";
 import { fetchCurrentUser } from "./store/auth";
 import { fetchShelters, selectVisibleShelters, clearRoute } from "./store/shelters";
+import MapBoundsAdjuster from "./components/MapBoundsAdjuster";
+import OfflineBanner from "./components/OfflineBanner";
 
 function MapPage() {
   const [backendStatus, setBackendStatus] = useState<
@@ -21,7 +23,7 @@ function MapPage() {
   >("checking");
   const [sosOpen, setSosOpen] = useState(false);
   const { position } = useAppSelector((s) => s.geolocation);
-  const { routingTo, items: allShelters } = useAppSelector((s) => s.shelters);
+  const { routingTo, items: allShelters, nearestMode, nearest } = useAppSelector((s) => s.shelters);
   const visibleShelters = useAppSelector(selectVisibleShelters);
   const dispatch = useAppDispatch();
 
@@ -45,8 +47,9 @@ function MapPage() {
       <div style={{ position: "relative", width: "100%", height: "100%" }}>
         <Map userPosition={position}>
           <FilterPanel />
+          {nearestMode && <MapBoundsAdjuster />}
           {position && <UserMarker lat={position.lat} lng={position.lng} />}
-          {visibleShelters.map((s) => (
+          {(nearestMode ? nearest : visibleShelters).map((s) => (
             <ShelterMarker key={s.id} shelter={s} />
           ))}
           {routeShelter && position && (
@@ -80,6 +83,7 @@ function MapPage() {
         )}
         <SosButton onClick={() => setSosOpen(true)} />
         <SosModal open={sosOpen} onClose={() => setSosOpen(false)} />
+        <OfflineBanner />
         <div
           style={{
             position: "absolute",
