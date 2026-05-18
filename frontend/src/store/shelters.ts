@@ -24,6 +24,7 @@ interface SheltersState {
   loading: boolean;
   error: string | null;
   filters: Filters;
+  routingTo: string | null;
 }
 
 const initialState: SheltersState = {
@@ -31,6 +32,7 @@ const initialState: SheltersState = {
   loading: false,
   error: null,
   filters: { types: [], amenities: [] },
+  routingTo: null,
 };
 
 export const fetchShelters = createAsyncThunk("shelters/fetch", async () => {
@@ -101,6 +103,12 @@ const sheltersSlice = createSlice({
     resetFilters(state) {
       state.filters = { types: [], amenities: [] };
     },
+    startRoute(state, action) {
+      state.routingTo = action.payload;
+    },
+    clearRoute(state) {
+      state.routingTo = null;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -119,7 +127,7 @@ const sheltersSlice = createSlice({
   },
 });
 
-export const { setTypeFilter, setAmenityFilter, resetFilters } = sheltersSlice.actions;
+export const { setTypeFilter, setAmenityFilter, resetFilters, startRoute, clearRoute } = sheltersSlice.actions;
 
 export function selectVisibleShelters(state: {
   shelters: SheltersState;

@@ -1,5 +1,7 @@
 import { Marker, Popup } from "react-leaflet";
 import L from "leaflet";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { startRoute } from "../store/shelters";
 import type { Shelter } from "../store/shelters";
 
 const colors: Record<string, string> = {
@@ -41,6 +43,10 @@ interface Props {
 }
 
 export default function ShelterMarker({ shelter }: Props) {
+  const dispatch = useAppDispatch();
+  const position = useAppSelector((s) => s.geolocation.position);
+  const noLocation = !position;
+
   return (
     <Marker position={[shelter.lat, shelter.lng]} icon={makeIcon(shelter.type)}>
       <Popup>
@@ -77,6 +83,28 @@ export default function ShelterMarker({ shelter }: Props) {
                 }}
               />
             </>
+          )}
+          <br /><br />
+          {noLocation ? (
+            <span style={{ color: "#9ca3af", fontSize: 12 }}>
+              Для маршруту потрібна геолокація
+            </span>
+          ) : (
+            <button
+              onClick={() => dispatch(startRoute(shelter.id))}
+              style={{
+                padding: "6px 14px",
+                background: "#2563eb",
+                color: "#fff",
+                border: "none",
+                borderRadius: 6,
+                cursor: "pointer",
+                fontSize: 13,
+                fontWeight: 600,
+              }}
+            >
+              Прокласти маршрут
+            </button>
           )}
         </div>
       </Popup>
