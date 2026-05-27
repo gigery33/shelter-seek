@@ -19,6 +19,9 @@ else
   npx prisma migrate deploy
 fi
 
+echo "Ensuring geom index and trigger exist..."
+node dist/ensure-geom.js
+
 echo "Running seed..."
 node dist/seed.js
 

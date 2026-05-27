@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import Map from "./components/Map";
 import UserMarker from "./components/UserMarker";
@@ -10,7 +10,8 @@ import SosModal from "./components/SosModal";
 import GeolocationGate from "./components/GeolocationGate";
 import { AdminRoute } from "./components/AdminRoute";
 import LoginPage from "./pages/LoginPage";
-import AdminPage from "./pages/AdminPage";
+
+const AdminPage = lazy(() => import("./pages/AdminPage"));
 import { useAppDispatch, useAppSelector } from "./store/hooks";
 import { fetchCurrentUser } from "./store/auth";
 import { fetchShelters, selectVisibleShelters, clearRoute } from "./store/shelters";
@@ -139,9 +140,11 @@ export default function App() {
       <Route
         path="/admin/dashboard"
         element={
-          <AdminRoute>
-            <AdminPage />
-          </AdminRoute>
+          <Suspense fallback={<div style={{ padding: 32, textAlign: 'center', color: '#6b7280' }}>Завантаження...</div>}>
+            <AdminRoute>
+              <AdminPage />
+            </AdminRoute>
+          </Suspense>
         }
       />
     </Routes>

@@ -31,12 +31,21 @@ export default defineConfig({
           },
         },
         {
-          urlPattern: /^\/api\/shelters$/,
+          urlPattern: ({ url }) => url.pathname === '/api/shelters',
           handler: 'NetworkFirst',
           options: {
             cacheName: 'shelters-api',
             networkTimeoutSeconds: 3,
             expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 * 24 },
+          },
+        },
+        {
+          urlPattern: ({ url }) => url.pathname.startsWith('/api/shelters/'),
+          handler: 'NetworkFirst',
+          options: {
+            cacheName: 'shelters-api-detail',
+            networkTimeoutSeconds: 3,
+            expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 },
           },
         },
       ],
