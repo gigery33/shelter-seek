@@ -60,7 +60,7 @@ function MapPage() {
             />
           )}
         </Map>
-        {routingTo && (
+          {routingTo && (
           <button
             onClick={() => dispatch(clearRoute())}
             style={{
@@ -70,7 +70,7 @@ function MapPage() {
               transform: "translateX(-50%)",
               zIndex: 1000,
               padding: "10px 20px",
-              background: "#fff",
+              background: "rgba(255,255,255,0.9)",
               border: "1px solid #d1d5db",
               borderRadius: 8,
               cursor: "pointer",
@@ -110,9 +110,9 @@ function MapPage() {
             boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
           }}
         >
-          {backendStatus === "checking" && "⏳ Connecting..."}
-          {backendStatus === "ok" && "✅ Backend: OK"}
-          {backendStatus === "error" && "❌ Backend: Disconnected"}
+          {backendStatus === "checking" && "⏳ Перевірка..."}
+          {backendStatus === "ok" && "✅ Online"}
+          {backendStatus === "error" && "❌ Offline"}
         </div>
       </div>
     </GeolocationGate>
